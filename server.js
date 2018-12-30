@@ -1,9 +1,9 @@
 //业务逻辑
-const data = require('./data.json');
+/* const data = require('./data.json');
 const fs = require('fs');
 const path = require('path');
-
-// 自定义把数据写入文件方法
+ */
+/* // 自定义把数据写入文件方法
 let writeDataToFile = (res)=>{
     fs.writeFile(path.join(__dirname,'data.json'),JSON.stringify(data),(err)=>{
         if(err){
@@ -85,4 +85,69 @@ let maxId = ()=>{
         arr.push(item.id);
     })
     return Math.max.apply(null,arr);
+} */
+
+
+
+//操作数据库的方法
+const data = require('./data.json');
+const fs = require('fs');
+const path = require('path');
+const sm = require('./sqlModule');
+
+
+//渲染主页面
+exports.showIndex = (req,res)=>{
+    let sql = 'select * from book ';
+    sm.sqlModule(sql,null,(result)=>{
+        res.render('index',{list:result});
+    })
+    
 }
+//渲染编辑图书页面
+exports.toEditBook = (req,res)=>{
+    //获取当前选中书的数据
+    let id = req.query.id;
+    let sql = 'select * from book where id=?';
+    let sqlData = [id];
+    sm.sqlModule(sql,sqlData,(result)=>{
+        res.render('editBook',result[0]);
+    })
+    
+}
+
+//编辑图书，更新数据
+exports.editBook = (req,res)=>{
+    let qdata = req.body;
+    //console.log(qdata);
+    
+      let sql = 'update book set name=?,author=?,category=?,description=? where id=?';
+      let sqlData = [qdata.name,qdata.author,qdata.category,qdata.description,qdata.id];
+
+      sm.sqlModule(sql,sqlData,()=>{
+          res.redirect('/');
+      })
+}
+
+//删除图书
+exports.removeBook = (req,res)=>{
+    let id = req.query.id;
+    let sql = 'delete from  book where id=?';
+    let sqlData = [id];
+    sm.sqlModule(sql,sqlData,()=>{
+        res.redirect('/');
+    })
+}
+//添加图书页面
+exports.toAddBook = (req,res)=>{
+    res.render('addBook',{});
+}
+//添加图书
+exports.addBook = (req,res)=>{
+    let qdata = req.body;
+    let sql = 'insert into book set ?';
+    sm.sqlModule(sql,qdata,()=>{
+        res.redirect('/');
+    })
+}
+
